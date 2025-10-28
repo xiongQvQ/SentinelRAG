@@ -1,0 +1,47 @@
+# Prometheus configuration for RAG system monitoring
+# Based on ReadyTensor Week 2 observability best practices
+
+global:
+  scrape_interval: 15s  # Scrape metrics every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'rag-system'
+    environment: 'development'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - 'alertmanager:9093'
+
+# Scrape configurations
+scrape_configs:
+  # RAG System Metrics
+  - job_name: 'rag-system'
+    static_configs:
+      - targets: ['localhost:8080']
+        labels:
+          service: 'rag-pipeline'
+          component: 'main'
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Health Check Endpoint
+  - job_name: 'rag-health'
+    static_configs:
+      - targets: ['localhost:8080']
+        labels:
+          service: 'rag-pipeline'
+          component: 'health'
+    metrics_path: '/health/detailed'
+    scrape_interval: 30s
+
+  # Prometheus Self-Monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+# Optional: Recording rules for aggregations
+# rule_files:
+#   - 'rules/*.yml'

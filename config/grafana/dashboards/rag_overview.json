@@ -1,0 +1,260 @@
+{
+  "dashboard": {
+    "title": "RAG System Overview",
+    "tags": ["rag", "llm", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Query Rate (queries/min)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(rag_queries_total[1m]) * 60",
+            "legendFormat": "{{status}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "queries/min"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Query Latency (P50, P95, P99)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(rag_query_latency_seconds_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(rag_query_latency_seconds_bucket[5m]))",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(rag_query_latency_seconds_bucket[5m]))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Latency"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Component Latency Breakdown",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(rag_component_latency_seconds_sum{component=\"input_validation\"}[5m]) / rate(rag_component_latency_seconds_count{component=\"input_validation\"}[5m])",
+            "legendFormat": "Input Validation",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(rag_component_latency_seconds_sum{component=\"vector_search\"}[5m]) / rate(rag_component_latency_seconds_count{component=\"vector_search\"}[5m])",
+            "legendFormat": "Vector Search",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(rag_component_latency_seconds_sum{component=\"llm\"}[5m]) / rate(rag_component_latency_seconds_count{component=\"llm\"}[5m])",
+            "legendFormat": "LLM Generation",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(rag_component_latency_seconds_sum{component=\"output_validation\"}[5m]) / rate(rag_component_latency_seconds_count{component=\"output_validation\"}[5m])",
+            "legendFormat": "Output Validation",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          {"format": "s", "label": "Avg Latency"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Hallucination Risk Distribution",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(rag_hallucination_risk_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(rag_hallucination_risk_bucket[5m]))",
+            "legendFormat": "P95",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "percentunit", "label": "Hallucination Risk"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0.3], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "avg"},
+              "type": "query"
+            }
+          ],
+          "name": "High Hallucination Risk"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Token Usage (input vs output)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(rag_tokens_total{type=\"input\"}[5m])",
+            "legendFormat": "Input Tokens/s",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(rag_tokens_total{type=\"output\"}[5m])",
+            "legendFormat": "Output Tokens/s",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Tokens/s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Cumulative Cost (USD)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rag_cost_usd_total{component=\"llm\"}",
+            "legendFormat": "Total Cost",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(rag_cost_usd_total{component=\"llm\"}[1h])",
+            "legendFormat": "Cost/hour",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "currencyUSD", "label": "Cost"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Error Rate by Component",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(rag_component_errors_total[5m])",
+            "legendFormat": "{{component}} - {{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Errors/s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Guardrails Violations",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(rag_guardrails_violations_total[5m])",
+            "legendFormat": "{{validator}} - {{action}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Violations/s"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Active Queries",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 32},
+        "targets": [
+          {
+            "expr": "rag_active_queries",
+            "refId": "A"
+          }
+        ],
+        "format": "none",
+        "valueName": "current"
+      },
+      {
+        "id": 10,
+        "title": "Success Rate (5m)",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 32},
+        "targets": [
+          {
+            "expr": "rate(rag_queries_total{status=\"success\"}[5m]) / rate(rag_queries_total[5m]) * 100",
+            "refId": "A"
+          }
+        ],
+        "format": "percent",
+        "valueName": "current",
+        "thresholds": "90,95",
+        "colors": ["#d44a3a", "#e0b400", "#299c46"]
+      },
+      {
+        "id": 11,
+        "title": "Avg Faithfulness Score",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 32},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(rag_faithfulness_score_bucket[5m]))",
+            "refId": "A"
+          }
+        ],
+        "format": "percentunit",
+        "valueName": "current",
+        "thresholds": "0.5,0.7",
+        "colors": ["#d44a3a", "#e0b400", "#299c46"]
+      },
+      {
+        "id": 12,
+        "title": "Cost per 1K Queries",
+        "type": "singlestat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 32},
+        "targets": [
+          {
+            "expr": "increase(rag_cost_usd_total{component=\"llm\"}[1h]) / (increase(rag_queries_total[1h]) / 1000)",
+            "refId": "A"
+          }
+        ],
+        "format": "currencyUSD",
+        "valueName": "current"
+      }
+    ]
+  }
+}
