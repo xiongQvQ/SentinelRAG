@@ -1,5 +1,9 @@
 # SentinelRAG
 
+<div align="center">
+  <img src="img/bg.png" alt="SentinelRAG - Enterprise AI Security" width="100%" style="max-width: 1200px; border-radius: 10px; margin: 20px 0;">
+</div>
+
 > **Production-Ready RAG System with Enterprise Security**
 >
 > A production-grade Retrieval-Augmented Generation (RAG) system powered by **Google Gemini 2.5 Flash**, featuring enterprise-level security, observability, and monitoring capabilities.
